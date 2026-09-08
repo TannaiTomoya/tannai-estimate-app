@@ -27,18 +27,7 @@ export default function LoginForm() {
       {error ? <p className={styles.error}>{error}</p> : null}
 
       <div className={styles.field}>
-        <label htmlFor="email">メールアドレス</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="username"
-          required
-        />
-      </div>
-
-      <div className={styles.field}>
-        <label htmlFor="password">パスワード</label>
+        <label htmlFor="password">管理者パスワード</label>
         <input
           id="password"
           name="password"

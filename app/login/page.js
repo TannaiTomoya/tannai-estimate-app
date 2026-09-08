@@ -14,7 +14,7 @@ export default function LoginPage() {
       <div className={styles.card}>
         <h1 className={styles.title}>見積もりアプリ</h1>
         <p className={styles.help}>
-          メールアドレスとパスワードを入力してください。ログインできない場合は、智弥に連絡してください。
+          管理者パスワードを入力してください。ログインできない場合は、智弥に連絡してください。
         </p>
         {skip ? (
           <p className={styles.error}>

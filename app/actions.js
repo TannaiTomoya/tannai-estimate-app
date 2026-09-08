@@ -6,12 +6,18 @@ import { isAuthSkipEnabled } from "@/lib/auth-skip";
 import { TAX_RATE } from "@/lib/constants";
 
 export async function loginAction(formData) {
-  const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
+  const email = String(process.env.ADMIN_EMAIL || "").trim();
 
-  if (!email || !password) {
+  if (!email) {
     return {
-      error: "メールアドレスまたはパスワードが違います。もう一度確認してください。",
+      error: "管理者ログインの設定が不完全です。智弥に連絡してください。",
+    };
+  }
+
+  if (!password) {
+    return {
+      error: "管理者パスワードが違います。もう一度確認してください。",
     };
   }
 
@@ -23,7 +29,7 @@ export async function loginAction(formData) {
 
   if (error) {
     return {
-      error: "メールアドレスまたはパスワードが違います。もう一度確認してください。",
+      error: "管理者パスワードが違います。もう一度確認してください。",
     };
   }
 
