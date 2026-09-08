@@ -40,12 +40,14 @@ export async function updateSession(request) {
 
   const pathname = request.nextUrl.pathname;
   const isLoginPage = pathname === "/login";
+  const isLandingPage = pathname === "/";
+  const isPublicPage = isLoginPage || isLandingPage;
   const isPublicAsset =
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.includes(".");
 
-  if (!user && !isLoginPage && !isPublicAsset) {
+  if (!user && !isPublicPage && !isPublicAsset) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

@@ -1,0 +1,269 @@
+.wrap {
+  min-height: 100vh;
+  padding: 1.25rem 1rem 2.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.device {
+  width: min(720px, 100%);
+  background:
+    linear-gradient(160deg, #d7e0b8 0%, #b7c48f 42%, #9eac74 100%);
+  border-radius: 28px 28px 48px 48px;
+  border: 4px solid #6f7a4e;
+  box-shadow:
+    0 18px 0 #4d5634,
+    0 26px 40px rgba(0, 0, 0, 0.45),
+    inset 0 3px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -8px 18px rgba(0, 0, 0, 0.12);
+  padding: 1.25rem 1.15rem 1.5rem;
+  color: #1a2210;
+  animation: popIn 0.55s ease-out both;
+}
+
+.speaker {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.speaker span {
+  width: 0.45rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  background: #667047;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: #3f4a28;
+  margin-bottom: 0.35rem;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  letter-spacing: 0.04em;
+  color: #15200c;
+  margin-bottom: 0.55rem;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.lead {
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: #243018;
+  margin-bottom: 1rem;
+}
+
+.screen {
+  background: linear-gradient(180deg, #9bbc0f 0%, #8bac0f 100%);
+  border: 5px solid #2d331f;
+  border-radius: 12px 12px 18px 18px;
+  box-shadow:
+    inset 0 0 0 4px #0f380f,
+    inset 0 0 30px rgba(15, 56, 15, 0.35),
+    0 2px 0 rgba(255, 255, 255, 0.25);
+  padding: 1rem 0.9rem 1.1rem;
+  margin-bottom: 1.25rem;
+  color: #0f380f;
+}
+
+.screenLabel {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  margin-bottom: 0.75rem;
+  opacity: 0.85;
+}
+
+.steps {
+  list-style: none;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.7rem;
+  background: rgba(15, 56, 15, 0.08);
+  border: 2px solid rgba(15, 56, 15, 0.25);
+  border-radius: 10px;
+  padding: 0.7rem 0.75rem;
+}
+
+.stepNo {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  min-width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #0f380f;
+  color: #9bbc0f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.step h2 {
+  font-size: 1.02rem;
+  margin-bottom: 0.2rem;
+  color: #0a280a;
+}
+
+.step p {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #143314;
+}
+
+.tip {
+  margin-top: 0.35rem !important;
+  font-size: 0.82rem !important;
+  color: #1f4d1f !important;
+  font-weight: 600;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.dpad {
+  width: 116px;
+  height: 116px;
+  position: relative;
+  filter: drop-shadow(0 6px 0 #3f4630);
+}
+
+.dpadUp,
+.dpadDown,
+.dpadLeft,
+.dpadRight,
+.dpadCenter {
+  position: absolute;
+  background: linear-gradient(180deg, #3a3f48, #1d2128);
+  border: 2px solid #0d1014;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+.dpadUp,
+.dpadDown {
+  left: 40px;
+  width: 36px;
+  height: 40px;
+  border-radius: 6px;
+}
+
+.dpadUp {
+  top: 4px;
+}
+
+.dpadDown {
+  bottom: 4px;
+}
+
+.dpadLeft,
+.dpadRight {
+  top: 40px;
+  width: 40px;
+  height: 36px;
+  border-radius: 6px;
+}
+
+.dpadLeft {
+  left: 4px;
+}
+
+.dpadRight {
+  right: 4px;
+}
+
+.dpadCenter {
+  left: 40px;
+  top: 40px;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+}
+
+.actionCluster {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: flex-end;
+}
+
+.abRow {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-end;
+}
+
+.abItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.abLabel {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  color: #445132;
+}
+
+.note {
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: #334022;
+}
+
+.note a {
+  color: #14532d;
+  font-weight: 700;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .controls {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .actionCluster {
+    width: 100%;
+    align-items: center;
+  }
+
+  .abRow {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .device {
+    animation: none;
+  }
+}
