@@ -12,6 +12,7 @@ export default function LoginPage() {
   return (
     <main className={styles.page}>
       <div className={styles.card}>
+        <p className={styles.brand}>Tannai Estimate // Secure Access</p>
         <h1 className={styles.title}>見積もりアプリ</h1>
         <p className={styles.help}>
           管理者パスワードを入力してください。ログインできない場合は、智弥に連絡してください。

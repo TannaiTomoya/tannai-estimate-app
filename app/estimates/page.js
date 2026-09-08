@@ -58,11 +58,14 @@ export default async function EstimatesPage() {
       ) : null}
 
       <header className={styles.header}>
-        <h1>見積もりアプリ</h1>
+        <div>
+          <p className={styles.brand}>Tannai Kenki Service</p>
+          <h1>見積もりアプリ</h1>
+        </div>
         {!skip ? (
           <form action={logoutAction}>
             <button className={styles.logoutButton} type="submit">
-              ログアウト
+              LOGOUT
             </button>
           </form>
         ) : null}
@@ -75,9 +78,7 @@ export default async function EstimatesPage() {
       </div>
 
       <section className={styles.tableWrap}>
-        <h2 className={styles.empty} style={{ borderBottom: "1px solid var(--border)" }}>
-          過去の見積もり一覧
-        </h2>
+        <h2 className={styles.tableTitle}>Archive / 過去の見積もり一覧</h2>
         {estimates.length === 0 ? (
           <p className={styles.empty}>まだ見積もりがありません。上のボタンから作成してください。</p>
         ) : (

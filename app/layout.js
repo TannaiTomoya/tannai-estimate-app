@@ -1,25 +1,42 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Orbitron, IBM_Plex_Sans_JP, IBM_Plex_Mono } from "next/font/google";
+import FuturisticBackdrop from "@/components/FuturisticBackdrop";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const display = Orbitron({
+  variable: "--font-orbitron",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const sans = IBM_Plex_Sans_JP({
+  variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const mono = IBM_Plex_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata = {
-  title: "見積もりアプリ",
+  title: "見積もりアプリ | 丹内建機サービス",
   description: "丹内建機サービス向け見積もり作成アプリ",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ja" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+    <html
+      lang="ja"
+      className={`${display.variable} ${sans.variable} ${mono.variable}`}
+    >
+      <body>
+        <FuturisticBackdrop />
+        <div style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

@@ -1,15 +1,23 @@
 :root {
-  --background: #f4f6f8;
-  --foreground: #1a1a1a;
-  --card: #ffffff;
-  --border: #d7dde3;
-  --muted: #5c6570;
-  --primary: #1f4b7a;
-  --primary-text: #ffffff;
-  --danger-bg: #fff4e5;
-  --danger-text: #8a4b00;
-  --skip-bg: #fff8d6;
-  --skip-text: #6b5300;
+  --background: #050b12;
+  --foreground: #e8f4f8;
+  --card: rgba(10, 24, 36, 0.78);
+  --card-solid: #0c1824;
+  --border: rgba(61, 255, 181, 0.28);
+  --border-soft: rgba(126, 200, 230, 0.18);
+  --muted: #8fb3c4;
+  --primary: #3dffb5;
+  --primary-dim: #1fa87a;
+  --primary-text: #04120e;
+  --accent: #4aa8ff;
+  --danger-bg: rgba(255, 140, 60, 0.12);
+  --danger-text: #ffb070;
+  --skip-bg: rgba(255, 220, 80, 0.12);
+  --skip-text: #ffe08a;
+  --glow: 0 0 24px rgba(61, 255, 181, 0.25);
+  --font-display: var(--font-orbitron), "Hiragino Sans", sans-serif;
+  --font-body: var(--font-sans), "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
 }
 
 html {
@@ -26,10 +34,11 @@ body {
   min-height: 100%;
   color: var(--foreground);
   background: var(--background);
-  font-family: "Hiragino Sans", "Noto Sans JP", Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
+  line-height: 1.55;
+  position: relative;
 }
 
 * {
@@ -47,4 +56,10 @@ input,
 select,
 textarea {
   font: inherit;
+  color: var(--foreground);
+}
+
+::selection {
+  background: rgba(61, 255, 181, 0.35);
+  color: #04120e;
 }
