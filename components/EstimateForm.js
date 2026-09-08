@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   MARKUP_RATE_OPTIONS,
   STATUS_OPTIONS,
   UNIT_PRICE_OPTIONS,
   WORKLOAD_OPTIONS,
 } from "@/lib/constants";
-import { computeEstimateTotals } from "@/lib/estimate-calc";
+import {
+  computeEstimateTotals,
+  getRecommendedUnitPrice,
+} from "@/lib/estimate-calc";
 import { saveEstimateAction } from "@/app/actions";
 import styles from "./estimate-form.module.css";
 
@@ -21,6 +24,11 @@ function emptyMaterial() {
 
 function mapInitial(initial) {
   if (!initial) {
+    const defaultCondition = {
+      workload: "medium",
+      includesConsumables: false,
+      includesTechFee: false,
+    };
     return {
       id: null,
       title: "",
@@ -34,7 +42,7 @@ function mapInitial(initial) {
       includesConsumables: false,
       includesTechFee: false,
       workDescription: "",
-      unitPrice: 50000,
+      unitPrice: getRecommendedUnitPrice(defaultCondition).price,
       materials: [emptyMaterial()],
       markupRate: 1.2,
       consumablesCost: 0,
@@ -102,16 +110,6 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
       }),
     [form],
   );
-
-  useEffect(() => {
-    if (initialEstimate) return;
-    setForm((prev) => ({
-      ...prev,
-      unitPrice: totals.recommended.price,
-    }));
-    // 初回のみ推奨単価を採用単価へ反映
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
