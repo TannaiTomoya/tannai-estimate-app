@@ -5,12 +5,12 @@ Create a file named `.env.local` in the project root with:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=（API設定の Publishable key）
-ADMIN_EMAIL=（Supabase Users に作った共有アカウントのメール）
+ADMIN_PASSWORD=（管理者パスワード）
 ```
 
 - Use **Publishable key** (not Secret keys)
-- `ADMIN_EMAIL` は画面に出さない。管理者パスワードログイン用の固定メール
-- パスワードは Supabase Users に設定したもの（env には書かない。画面で入力）
+- ログイン画面は管理者パスワードのみ（メール入力なし）
+- メールはアプリに出さない。Supabase 内部ユーザーは固定: `admin@tannai-estimate.local`
 - Do not commit `.env.local` (covered by `.gitignore` as `.env*`)
 
 Vercel にも同じ3つを設定する（`ENABLE_AUTH_SKIP` は置かない）。

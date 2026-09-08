@@ -3,19 +3,20 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { isAuthSkipEnabled } from "@/lib/auth-skip";
+import { INTERNAL_ADMIN_EMAIL, getAdminPassword } from "@/lib/admin-auth";
 import { TAX_RATE } from "@/lib/constants";
 
 export async function loginAction(formData) {
   const password = String(formData.get("password") || "");
-  const email = String(process.env.ADMIN_EMAIL || "").trim();
+  const adminPassword = getAdminPassword();
 
-  if (!email) {
+  if (!adminPassword) {
     return {
       error: "管理者ログインの設定が不完全です。智弥に連絡してください。",
     };
   }
 
-  if (!password) {
+  if (!password || password !== adminPassword) {
     return {
       error: "管理者パスワードが違います。もう一度確認してください。",
     };
@@ -23,8 +24,8 @@ export async function loginAction(formData) {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+    email: INTERNAL_ADMIN_EMAIL,
+    password: adminPassword,
   });
 
   if (error) {

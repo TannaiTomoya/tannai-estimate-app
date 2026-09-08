@@ -15,7 +15,7 @@
 11. [ ] ログアウト後、見積もり画面に戻れない
 12. [ ] Vercel に `ENABLE_AUTH_SKIP` が設定されていない
 13. [ ] 公開サインアップ画面が存在しない
-14. [ ] Vercel に `ADMIN_EMAIL` が設定されている（パスワードは Users 側）
+14. [ ] Vercel に `ADMIN_PASSWORD` が設定されている（メール系 env は不要）
 
 ## 本番ルール
 
