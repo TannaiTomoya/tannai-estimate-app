@@ -214,33 +214,22 @@ auth.users (1)
 
 すべての業務テーブルで RLS を有効にする。
 
-### 共通ルール
-- 認証済みユーザーのみアクセス可能
-- `user_id = auth.uid()` の行だけ SELECT / INSERT / UPDATE / DELETE 可能
-- 他人の見積もり・明細・実績は見えない・触れない
+### 共通ルール（Version 1 確定）
+- 認証済みユーザー（父・本人）なら、見積もり関連テーブルの全行を読み書きできる
+- 未ログインでは何も見えない・触れない
+- `user_id` は作成者記録として残す（INSERT 時は自分の ID を入れる）
+- 公開サインアップはしない前提のため、ログインできるのは手動作成した2アカウントのみ
 
 ### テーブル別
-
-#### `estimates`
-- SELECT: `user_id = auth.uid()`
-- INSERT: `user_id = auth.uid()`（自分のID以外では作れない）
-- UPDATE: `user_id = auth.uid()`
-- DELETE: `user_id = auth.uid()`
-
-#### `estimate_materials`
-- SELECT / INSERT / UPDATE / DELETE: `user_id = auth.uid()`
-- 追加推奨: 親見積もりも自分のものに限定する  
-  （`estimate_id` が、同じ `user_id` の `estimates` に存在すること）
-
-#### `estimate_results`
-- SELECT / INSERT / UPDATE / DELETE: `user_id = auth.uid()`
-- 追加推奨: 親見積もりも自分のものに限定する
-- ユニーク制約により、同じ見積もりへの二重作成はDB側で防ぐ
+- `estimates` / `estimate_materials` / `estimate_results`
+  - SELECT / UPDATE / DELETE: 認証済みなら全件
+  - INSERT: 認証済み、かつ `user_id = auth.uid()`
 
 ### Version 1でやらないRLS
 - ロール別権限（管理者・一般）
-- 家族間での共有ポリシー（必要なら後で `shared_with` 等を検討）
+- 会社IDによる共有テーブル
 - 匿名公開用ポリシー
+- `profiles` / `posts` はハンズオン用。見積もりアプリでは未使用
 
 ## 7. 画面との対応
 
