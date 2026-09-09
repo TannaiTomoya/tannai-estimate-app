@@ -4,7 +4,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { isAuthSkipEnabled } from "@/lib/auth-skip";
 import { INTERNAL_ADMIN_EMAIL, getAdminPassword } from "@/lib/admin-auth";
-import { TAX_RATE } from "@/lib/constants";
+import {
+  MARKUP_RATE_OPTIONS,
+  STATUS_OPTIONS,
+  TAX_RATE,
+  WORKLOAD_OPTIONS,
+} from "@/lib/constants";
+import { computeEstimateTotals } from "@/lib/estimate-calc";
+import { describeDbError } from "@/lib/db-error";
 
 export async function loginAction(formData) {
   const password = String(formData.get("password") || "");
@@ -103,12 +110,24 @@ async function requireUser() {
   return { supabase, user };
 }
 
+const WORKLOAD_VALUES = new Set(WORKLOAD_OPTIONS.map((o) => o.value));
+const STATUS_VALUES = new Set(STATUS_OPTIONS.map((o) => o.value));
+
+function isValidDate(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+}
+
+/**
+ * クライアントからは「入力値」だけを受け取り、金額・合計・推奨単価・アラートは
+ * ここで lib/estimate-calc.js を使って再計算する（画面側の計算結果は信用しない）。
+ */
 export async function saveEstimateAction(payload) {
   const auth = await requireUser();
   if (auth.error) return { error: auth.error };
 
-  const { supabase, user } = auth;
+  const { supabase } = auth;
   const rawMaterials = Array.isArray(payload.materials) ? payload.materials : [];
+
   if (
     hasDecimalMoney([
       payload.unitPrice,
@@ -120,88 +139,118 @@ export async function saveEstimateAction(payload) {
   ) {
     return { error: MONEY_ERROR };
   }
-  const materials = parseMaterials(payload.materials);
-  const riskAlerts = Array.isArray(payload.riskAlerts)
-    ? payload.riskAlerts
-    : [];
 
-  const estimateRow = {
+  // ---- 入力値の正規化 ----
+  const input = {
     title: String(payload.title || "").trim(),
-    customer_name: String(payload.customerName || "").trim(),
-    work_location: String(payload.workLocation || "").trim() || null,
-    estimate_date: payload.estimateDate,
-    delivery_date: payload.deliveryDate || null,
-    worker_count: toInt(payload.workerCount),
-    planned_days: toNum(payload.plannedDays),
-    workload: payload.workload || "medium",
-    includes_consumables: Boolean(payload.includesConsumables),
-    includes_tech_fee: Boolean(payload.includesTechFee),
-    work_description: String(payload.workDescription || "").trim() || null,
-    recommended_unit_price: toInt(payload.recommendedUnitPrice),
-    recommended_price_label: payload.recommendedPriceLabel || null,
-    unit_price: toInt(payload.unitPrice),
-    labor_cost: toInt(payload.laborCost),
-    material_markup_rate: toNum(payload.markupRate, 1),
-    material_purchase_total: toInt(payload.materialPurchaseTotal),
-    material_cost: toInt(payload.materialCost),
-    consumables_cost: toInt(payload.consumablesCost),
-    tech_fee: toInt(payload.techFee),
-    misc_cost: toInt(payload.miscCost),
-    subtotal: toInt(payload.subtotal),
-    tax_rate: TAX_RATE,
-    tax_amount: toInt(payload.taxAmount),
-    total_with_tax: toInt(payload.totalWithTax),
-    reason_unit_price: String(payload.reasonUnitPrice || "").trim() || null,
-    reason_manpower: String(payload.reasonManpower || "").trim() || null,
-    reason_delivery: String(payload.reasonDelivery || "").trim() || null,
-    risk_alerts: riskAlerts,
-    status: payload.status || "draft",
-    updated_at: new Date().toISOString(),
+    customerName: String(payload.customerName || "").trim(),
+    workLocation: String(payload.workLocation || "").trim() || null,
+    estimateDate: String(payload.estimateDate || ""),
+    deliveryDate: String(payload.deliveryDate || "") || null,
+    workerCount: toInt(payload.workerCount),
+    plannedDays: toNum(payload.plannedDays),
+    workload: WORKLOAD_VALUES.has(payload.workload) ? payload.workload : "medium",
+    includesConsumables: Boolean(payload.includesConsumables),
+    includesTechFee: Boolean(payload.includesTechFee),
+    workDescription: String(payload.workDescription || "").trim() || null,
+    unitPrice: toInt(payload.unitPrice),
+    markupRate: toNum(payload.markupRate, MARKUP_RATE_OPTIONS[0]),
+    consumablesCost: toInt(payload.consumablesCost),
+    techFee: toInt(payload.techFee),
+    miscCost: toInt(payload.miscCost),
+    reasonUnitPrice: String(payload.reasonUnitPrice || "").trim() || null,
+    reasonManpower: String(payload.reasonManpower || "").trim() || null,
+    reasonDelivery: String(payload.reasonDelivery || "").trim() || null,
+    status: STATUS_VALUES.has(payload.status) ? payload.status : "draft",
   };
+  const materials = parseMaterials(rawMaterials);
 
-  if (!estimateRow.title || !estimateRow.customer_name || !estimateRow.estimate_date) {
+  if (!input.title || !input.customerName || !isValidDate(input.estimateDate)) {
     return { error: "案件名、顧客名、見積もり日は必須です。" };
   }
-
-  let estimateId = payload.id || null;
-
-  if (estimateId) {
-    const { error } = await supabase
-      .from("estimates")
-      .update(estimateRow)
-      .eq("id", estimateId);
-
-    if (error) {
-      return { error: "保存に失敗しました。しばらくしてから再度お試しください。" };
-    }
-
-    await supabase.from("estimate_materials").delete().eq("estimate_id", estimateId);
-  } else {
-    const { data, error } = await supabase
-      .from("estimates")
-      .insert({ ...estimateRow, user_id: user.id })
-      .select("id")
-      .single();
-
-    if (error || !data) {
-      return { error: "保存に失敗しました。しばらくしてから再度お試しください。" };
-    }
-    estimateId = data.id;
+  if (input.deliveryDate && !isValidDate(input.deliveryDate)) {
+    return { error: "顧客提示予定納期の形式が正しくありません。" };
+  }
+  const negatives = [
+    input.workerCount,
+    input.plannedDays,
+    input.unitPrice,
+    input.markupRate,
+    input.consumablesCost,
+    input.techFee,
+    input.miscCost,
+    ...materials.flatMap((m) => [m.unit_purchase_price, m.quantity]),
+  ];
+  if (negatives.some((v) => v < 0)) {
+    return { error: "マイナスの値は入力できません。" };
   }
 
-  if (materials.length > 0) {
-    const materialRows = materials.map((row) => ({
-      ...row,
-      estimate_id: estimateId,
-      user_id: user.id,
-    }));
-    const { error: materialError } = await supabase
-      .from("estimate_materials")
-      .insert(materialRows);
+  // ---- サーバ側で再計算 ----
+  const totals = computeEstimateTotals({
+    workload: input.workload,
+    includesConsumables: input.includesConsumables,
+    includesTechFee: input.includesTechFee,
+    workerCount: input.workerCount,
+    plannedDays: input.plannedDays,
+    unitPrice: input.unitPrice,
+    materials: materials.map((m) => ({
+      name: m.name,
+      unitPurchasePrice: m.unit_purchase_price,
+      quantity: m.quantity,
+    })),
+    markupRate: input.markupRate,
+    consumablesCost: input.consumablesCost,
+    techFee: input.techFee,
+    miscCost: input.miscCost,
+  });
 
-    if (materialError) {
-      return { error: "材料明細の保存に失敗しました。" };
-    }
+  const estimateRow = {
+    title: input.title,
+    customer_name: input.customerName,
+    work_location: input.workLocation,
+    estimate_date: input.estimateDate,
+    delivery_date: input.deliveryDate,
+    worker_count: input.workerCount,
+    planned_days: input.plannedDays,
+    workload: input.workload,
+    includes_consumables: input.includesConsumables,
+    includes_tech_fee: input.includesTechFee,
+    work_description: input.workDescription,
+    recommended_unit_price: totals.recommended.price,
+    recommended_price_label: totals.recommended.label,
+    unit_price: input.unitPrice,
+    labor_cost: totals.laborCost,
+    material_markup_rate: input.markupRate,
+    material_purchase_total: totals.materialPurchaseTotal,
+    material_cost: totals.materialCost,
+    consumables_cost: input.consumablesCost,
+    tech_fee: input.techFee,
+    misc_cost: input.miscCost,
+    subtotal: totals.subtotal,
+    tax_rate: TAX_RATE,
+    tax_amount: totals.taxAmount,
+    total_with_tax: totals.totalWithTax,
+    reason_unit_price: input.reasonUnitPrice,
+    reason_manpower: input.reasonManpower,
+    reason_delivery: input.reasonDelivery,
+    risk_alerts: totals.riskAlerts,
+    status: input.status,
+  };
+
+  // ---- 本体＋材料明細を 1 トランザクションで保存（supabase/migrations/0003） ----
+  const { data: estimateId, error } = await supabase.rpc("save_estimate", {
+    p_id: payload.id || null,
+    p_estimate: estimateRow,
+    p_materials: materials,
+  });
+
+  if (error || !estimateId) {
+    return {
+      error: describeDbError(
+        error || { code: "NO_DATA", message: "保存結果を取得できませんでした" },
+        "rpc.save_estimate",
+      ),
+    };
   }
 
   redirect(`/estimates/${estimateId}`);
@@ -257,7 +306,9 @@ export async function saveResultAction(formData) {
   });
 
   if (error) {
-    return { error: "実績の保存に失敗しました。" };
+    return {
+      error: `実績の保存に失敗しました。${describeDbError(error, "estimate_results.upsert")}`,
+    };
   }
 
   redirect(`/estimates/${estimateId}`);

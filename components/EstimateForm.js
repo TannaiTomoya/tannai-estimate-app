@@ -162,6 +162,7 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
       unitPurchasePrice: validateMoneyInput(row.unitPurchasePrice).value ?? 0,
     }));
 
+    // 送るのは入力値のみ。金額・合計・推奨単価・アラートはサーバ側で再計算する。
     const result = await saveEstimateAction({
       id: form.id,
       title: form.title,
@@ -175,23 +176,14 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
       includesConsumables: form.includesConsumables,
       includesTechFee: form.includesTechFee,
       workDescription: form.workDescription,
-      recommendedUnitPrice: totals.recommended.price,
-      recommendedPriceLabel: totals.recommended.label,
       unitPrice: money.fields.unitPrice.value ?? 0,
-      laborCost: totals.laborCost,
       markupRate: form.markupRate,
-      materialPurchaseTotal: totals.materialPurchaseTotal,
-      materialCost: totals.materialCost,
       consumablesCost: money.fields.consumablesCost.value ?? 0,
       techFee: money.fields.techFee.value ?? 0,
       miscCost: money.fields.miscCost.value ?? 0,
-      subtotal: totals.subtotal,
-      taxAmount: totals.taxAmount,
-      totalWithTax: totals.totalWithTax,
       reasonUnitPrice: form.reasonUnitPrice,
       reasonManpower: form.reasonManpower,
       reasonDelivery: form.reasonDelivery,
-      riskAlerts: totals.riskAlerts,
       status: form.status,
       materials: cleanMaterials,
     });

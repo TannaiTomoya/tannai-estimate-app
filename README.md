@@ -48,7 +48,15 @@ npm run dev
 
 `.env.local` の設定内容は `docs/env-setup.md` を参照してください。
 
+## Supabase の構築
+
+`supabase/migrations/*.sql` を番号順に SQL Editor で実行する（詳細は `supabase/README.md`）。
+保存は `save_estimate()` 関数で本体と材料明細を1トランザクションで行い、
+合計金額はサーバ側で再計算するため、画面側の計算結果は保存に使われない。
+
 ## ドキュメント
+
+- `supabase/README.md` マイグレーション手順
 
 - `docs/requirements.md` 要件定義
 - `docs/screens.md` 画面設計

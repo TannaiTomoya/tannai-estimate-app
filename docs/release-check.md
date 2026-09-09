@@ -16,6 +16,9 @@
 12. [ ] Vercel に `ENABLE_AUTH_SKIP` が設定されていない
 13. [ ] 公開サインアップ画面が存在しない
 14. [ ] Vercel に `ADMIN_PASSWORD` が設定されている（メール系 env は不要）
+15. [ ] Supabase で `authenticated` に3テーブルの GRANT がある（`docs/supabase-changes.md` 2-2 の確認 SQL が12行返る）
+16. [ ] Supabase に `save_estimate` 関数がある（`supabase/migrations/0003` 実行済み）
+17. [ ] 既存見積もりの編集保存後、材料明細が残っている
 
 ## 本番ルール
 

@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { isAuthSkipEnabled } from "@/lib/auth-skip";
 import { logoutAction } from "@/app/actions";
 import { STATUS_LABELS } from "@/lib/constants";
+import { describeDbError } from "@/lib/db-error";
 import styles from "./estimates.module.css";
 
 export const metadata = {
@@ -18,6 +19,7 @@ export default async function EstimatesPage() {
   const skip = isAuthSkipEnabled();
   let estimates = [];
   let resultIds = new Set();
+  let loadError = "";
 
   if (!skip) {
     const supabase = await createClient();
@@ -29,7 +31,7 @@ export default async function EstimatesPage() {
       redirect("/login");
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("estimates")
       .select(
         "id, estimate_date, title, customer_name, total_with_tax, status",
@@ -37,6 +39,9 @@ export default async function EstimatesPage() {
       .order("estimate_date", { ascending: false })
       .order("created_at", { ascending: false });
 
+    if (error) {
+      loadError = `一覧を読み込めませんでした。${describeDbError(error, "estimates.select")}`;
+    }
     estimates = data || [];
 
     if (estimates.length > 0) {
@@ -79,7 +84,8 @@ export default async function EstimatesPage() {
 
       <section className={styles.tableWrap}>
         <h2 className={styles.tableTitle}>Archive / 過去の見積もり一覧</h2>
-        {estimates.length === 0 ? (
+        {loadError ? <p className={styles.banner}>{loadError}</p> : null}
+        {estimates.length === 0 && !loadError ? (
           <p className={styles.empty}>まだ見積もりがありません。上のボタンから作成してください。</p>
         ) : (
           <table className={styles.table}>
