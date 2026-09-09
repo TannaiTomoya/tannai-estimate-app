@@ -48,6 +48,16 @@ function toInt(value, fallback = 0) {
   return Number.isFinite(n) ? Math.round(n) : fallback;
 }
 
+// 金額欄は整数のみ受け付ける。小数点が混ざっていたら保存を拒否する（20.000 の誤入力対策）。
+function hasDecimalMoney(values) {
+  return values.some((v) => {
+    const s = String(v ?? "").trim();
+    return s !== "" && (s.includes(".") || s.includes("。"));
+  });
+}
+const MONEY_ERROR =
+  "金額欄に小数点が含まれています。20000 のように数字だけで入力してください。";
+
 function toNum(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -98,6 +108,18 @@ export async function saveEstimateAction(payload) {
   if (auth.error) return { error: auth.error };
 
   const { supabase, user } = auth;
+  const rawMaterials = Array.isArray(payload.materials) ? payload.materials : [];
+  if (
+    hasDecimalMoney([
+      payload.unitPrice,
+      payload.consumablesCost,
+      payload.techFee,
+      payload.miscCost,
+      ...rawMaterials.map((row) => row?.unitPurchasePrice),
+    ])
+  ) {
+    return { error: MONEY_ERROR };
+  }
   const materials = parseMaterials(payload.materials);
   const riskAlerts = Array.isArray(payload.riskAlerts)
     ? payload.riskAlerts
@@ -194,6 +216,18 @@ export async function saveResultAction(formData) {
 
   if (!estimateId) {
     return { error: "見積もりが見つかりません。" };
+  }
+
+  if (
+    hasDecimalMoney([
+      formData.get("actualMaterialPurchaseTotal"),
+      formData.get("actualConsumablesCost"),
+      formData.get("actualTechFee"),
+      formData.get("actualMiscCost"),
+      formData.get("actualOrderAmount"),
+    ])
+  ) {
+    return { error: MONEY_ERROR };
   }
 
   const row = {

@@ -12,6 +12,8 @@ import {
   getRecommendedUnitPrice,
 } from "@/lib/estimate-calc";
 import { saveEstimateAction } from "@/app/actions";
+import { formatYen, validateMoneyInput } from "@/lib/money-input";
+import MoneyField from "./MoneyField";
 import styles from "./estimate-form.module.css";
 
 function todayString() {
@@ -93,6 +95,23 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
+  // 金額欄は整数のみ。小数点などが入っている欄は計算では 0 扱いにし、保存を止める。
+  const money = useMemo(() => {
+    const fields = {
+      unitPrice: validateMoneyInput(form.unitPrice),
+      consumablesCost: validateMoneyInput(form.consumablesCost),
+      techFee: validateMoneyInput(form.techFee),
+      miscCost: validateMoneyInput(form.miscCost),
+    };
+    const materialErrors = form.materials.map(
+      (row) => validateMoneyInput(row.unitPurchasePrice).error,
+    );
+    const hasError =
+      Object.values(fields).some((f) => f.error) ||
+      materialErrors.some((e) => e);
+    return { fields, materialErrors, hasError };
+  }, [form]);
+
   const totals = useMemo(
     () =>
       computeEstimateTotals({
@@ -101,14 +120,17 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
         includesTechFee: form.includesTechFee,
         workerCount: form.workerCount,
         plannedDays: form.plannedDays,
-        unitPrice: form.unitPrice,
-        materials: form.materials,
+        unitPrice: money.fields.unitPrice.value ?? 0,
+        materials: form.materials.map((row) => ({
+          ...row,
+          unitPurchasePrice: validateMoneyInput(row.unitPurchasePrice).value ?? 0,
+        })),
         markupRate: form.markupRate,
-        consumablesCost: form.consumablesCost,
-        techFee: form.techFee,
-        miscCost: form.miscCost,
+        consumablesCost: money.fields.consumablesCost.value ?? 0,
+        techFee: money.fields.techFee.value ?? 0,
+        miscCost: money.fields.miscCost.value ?? 0,
       }),
-    [form],
+    [form, money],
   );
 
   function updateField(key, value) {
@@ -126,8 +148,19 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (money.hasError) {
+      setError(
+        "金額欄に小数点や数字以外が入っています。赤く表示された欄を直してから保存してください。",
+      );
+      return;
+    }
     setPending(true);
     setError("");
+
+    const cleanMaterials = form.materials.map((row) => ({
+      ...row,
+      unitPurchasePrice: validateMoneyInput(row.unitPurchasePrice).value ?? 0,
+    }));
 
     const result = await saveEstimateAction({
       id: form.id,
@@ -144,14 +177,14 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
       workDescription: form.workDescription,
       recommendedUnitPrice: totals.recommended.price,
       recommendedPriceLabel: totals.recommended.label,
-      unitPrice: form.unitPrice,
+      unitPrice: money.fields.unitPrice.value ?? 0,
       laborCost: totals.laborCost,
       markupRate: form.markupRate,
       materialPurchaseTotal: totals.materialPurchaseTotal,
       materialCost: totals.materialCost,
-      consumablesCost: form.consumablesCost,
-      techFee: form.techFee,
-      miscCost: form.miscCost,
+      consumablesCost: money.fields.consumablesCost.value ?? 0,
+      techFee: money.fields.techFee.value ?? 0,
+      miscCost: money.fields.miscCost.value ?? 0,
       subtotal: totals.subtotal,
       taxAmount: totals.taxAmount,
       totalWithTax: totals.totalWithTax,
@@ -160,7 +193,7 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
       reasonDelivery: form.reasonDelivery,
       riskAlerts: totals.riskAlerts,
       status: form.status,
-      materials: form.materials,
+      materials: cleanMaterials,
     });
 
     if (result?.error) {
@@ -248,7 +281,9 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
             />
           </div>
           <div className={styles.field}>
-            <label htmlFor="plannedDays">想定日数</label>
+            <label htmlFor="plannedDays">
+              想定日数 <span className={styles.unit}>（半日は 0.5）</span>
+            </label>
             <input
               id="plannedDays"
               type="number"
@@ -307,7 +342,14 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
             />
           </div>
         </div>
-        <p className={styles.hint}>延べ人日: {totals.personDays}</p>
+        <p className={styles.explain}>
+          <strong>延べ人日（のべにんにち）</strong> = 作業人数 × 想定日数。
+          「1人が1日働く」を1と数えた作業量です。
+          <br />
+          今回: {Number(form.workerCount) || 0}人 × {Number(form.plannedDays) || 0}日 ={" "}
+          <strong>{totals.personDays} 人日</strong>
+          。この数に1人1日単価をかけたものが工賃になります。
+        </p>
       </section>
 
       <section className={styles.section}>
@@ -337,65 +379,93 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
             </button>
           ))}
         </div>
-        <div className={styles.field}>
-          <label htmlFor="unitPrice">採用単価（手動調整可）</label>
-          <input
-            id="unitPrice"
-            type="number"
-            min="0"
-            step="1000"
-            value={form.unitPrice}
-            onChange={(e) => updateField("unitPrice", e.target.value)}
-          />
-        </div>
+        <MoneyField
+          id="unitPrice"
+          label="採用する1人1日単価（手動調整可）"
+          value={form.unitPrice}
+          onChange={(v) => updateField("unitPrice", v)}
+          placeholder="例: 50000"
+        />
         <p className={styles.hint}>
-          推奨との差額: ¥
-          {(
-            Number(form.unitPrice) - totals.recommended.price
-          ).toLocaleString("ja-JP")}
+          推奨との差額:{" "}
+          {formatYen((money.fields.unitPrice.value ?? 0) - totals.recommended.price)}
         </p>
         <p className={styles.hint}>
-          工賃: ¥{totals.laborCost.toLocaleString("ja-JP")}
+          工賃 = {totals.personDays} 人日 × {formatYen(money.fields.unitPrice.value ?? 0)} ={" "}
+          <strong>{formatYen(totals.laborCost)}</strong>
         </p>
       </section>
 
       <section className={styles.section}>
         <h2>4. 材料費</h2>
-        {form.materials.map((row, index) => (
-          <div className={styles.row} key={index}>
-            <input
-              placeholder="材料名"
-              value={row.name}
-              onChange={(e) => updateMaterial(index, "name", e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="仕入れ単価"
-              value={row.unitPurchasePrice}
-              onChange={(e) =>
-                updateMaterial(index, "unitPurchasePrice", e.target.value)
-              }
-            />
-            <input
-              type="number"
-              placeholder="数量"
-              value={row.quantity}
-              onChange={(e) => updateMaterial(index, "quantity", e.target.value)}
-            />
-            <button
-              type="button"
-              className={styles.buttonSecondary}
-              onClick={() =>
-                setForm((prev) => ({
-                  ...prev,
-                  materials: prev.materials.filter((_, i) => i !== index),
-                }))
-              }
-            >
-              削除
-            </button>
-          </div>
-        ))}
+        <p className={styles.explain}>
+          使う材料を1つずつ書きます。材料が複数あるときは下の
+          「＋ 材料をもう1つ追加」を押すと入力欄が増えます。
+          材料を使わない場合は空欄のままで構いません。
+        </p>
+        {form.materials.map((row, index) => {
+          const price = validateMoneyInput(row.unitPurchasePrice).value ?? 0;
+          const qty = Number(row.quantity) || 0;
+          return (
+            <div className={styles.materialCard} key={index}>
+              <div className={styles.materialHead}>
+                <span>材料 {index + 1}</span>
+                {form.materials.length > 1 ? (
+                  <button
+                    type="button"
+                    className={styles.removeButton}
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        materials: prev.materials.filter((_, i) => i !== index),
+                      }))
+                    }
+                  >
+                    この材料を消す
+                  </button>
+                ) : null}
+              </div>
+              <div className={styles.grid}>
+                <div className={`${styles.field} ${styles.fieldFull}`}>
+                  <label htmlFor={`material-name-${index}`}>材料名</label>
+                  <input
+                    id={`material-name-${index}`}
+                    placeholder="例: 油圧ホース"
+                    value={row.name}
+                    onChange={(e) => updateMaterial(index, "name", e.target.value)}
+                  />
+                </div>
+                <MoneyField
+                  id={`material-price-${index}`}
+                  label="仕入れ単価（1個あたり）"
+                  value={row.unitPurchasePrice}
+                  onChange={(v) => updateMaterial(index, "unitPurchasePrice", v)}
+                  placeholder="例: 12000"
+                  compact
+                />
+                <div className={`${styles.field} ${styles.fieldCompact}`}>
+                  <label htmlFor={`material-qty-${index}`}>
+                    数量 <span className={styles.unit}>（個数・小数可）</span>
+                  </label>
+                  <input
+                    id={`material-qty-${index}`}
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    inputMode="decimal"
+                    placeholder="例: 2"
+                    value={row.quantity}
+                    onChange={(e) => updateMaterial(index, "quantity", e.target.value)}
+                  />
+                </div>
+              </div>
+              <p className={styles.materialTotal}>
+                この材料の仕入れ額: {formatYen(price)} × {qty} ={" "}
+                {formatYen(price * qty)}
+              </p>
+            </div>
+          );
+        })}
         <div className={styles.actions}>
           <button
             type="button"
@@ -407,7 +477,7 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
               }))
             }
           >
-            行を追加
+            ＋ 材料をもう1つ追加
           </button>
         </div>
         <div className={styles.field}>
@@ -437,49 +507,48 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
           />
         </div>
         <p className={styles.hint}>
-          仕入れ合計: ¥{totals.materialPurchaseTotal.toLocaleString("ja-JP")} /
-          材料費: ¥{totals.materialCost.toLocaleString("ja-JP")}
+          仕入れ合計 {formatYen(totals.materialPurchaseTotal)} × 掛け率{" "}
+          {Number(form.markupRate) || 0} = 材料費{" "}
+          <strong>{formatYen(totals.materialCost)}</strong>
         </p>
       </section>
 
       <section className={styles.section}>
         <h2>5. その他費用</h2>
+        <p className={styles.explain}>
+          金額は <strong>数字だけ</strong> で入力してください（例: 20000）。
+          「20.000」のように小数点を入れると計算が合わなくなるため、入力できません。
+        </p>
         <div className={styles.grid}>
-          <div className={styles.field}>
-            <label htmlFor="consumablesCost">消耗品費</label>
-            <input
-              id="consumablesCost"
-              type="number"
-              min="0"
-              value={form.consumablesCost}
-              onChange={(e) => updateField("consumablesCost", e.target.value)}
-            />
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="techFee">技術料</label>
-            <input
-              id="techFee"
-              type="number"
-              min="0"
-              value={form.techFee}
-              onChange={(e) => updateField("techFee", e.target.value)}
-            />
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="miscCost">諸経費</label>
-            <input
-              id="miscCost"
-              type="number"
-              min="0"
-              value={form.miscCost}
-              onChange={(e) => updateField("miscCost", e.target.value)}
-            />
-          </div>
+          <MoneyField
+            id="consumablesCost"
+            label="消耗品費"
+            value={form.consumablesCost}
+            onChange={(v) => updateField("consumablesCost", v)}
+          />
+          <MoneyField
+            id="techFee"
+            label="技術料"
+            value={form.techFee}
+            onChange={(v) => updateField("techFee", v)}
+          />
+          <MoneyField
+            id="miscCost"
+            label="諸経費"
+            value={form.miscCost}
+            onChange={(v) => updateField("miscCost", v)}
+          />
         </div>
       </section>
 
       <section className={styles.section}>
         <h2>6. 合計とアラート</h2>
+        {money.hasError ? (
+          <p className={styles.blockingNotice}>
+            金額欄に小数点や数字以外が入っています。その欄は 0 として計算しています。
+            直すまで保存できません。
+          </p>
+        ) : null}
         {totals.riskAlerts.length > 0 ? (
           <div className={styles.alerts}>
             <strong>注意</strong>
@@ -501,15 +570,15 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
           </li>
           <li>
             <span>消耗品費</span>
-            <span>¥{Number(form.consumablesCost || 0).toLocaleString("ja-JP")}</span>
+            <span>{formatYen(money.fields.consumablesCost.value ?? 0)}</span>
           </li>
           <li>
             <span>技術料</span>
-            <span>¥{Number(form.techFee || 0).toLocaleString("ja-JP")}</span>
+            <span>{formatYen(money.fields.techFee.value ?? 0)}</span>
           </li>
           <li>
             <span>諸経費</span>
-            <span>¥{Number(form.miscCost || 0).toLocaleString("ja-JP")}</span>
+            <span>{formatYen(money.fields.miscCost.value ?? 0)}</span>
           </li>
           <li>
             <span>小計（税抜）</span>
@@ -581,8 +650,16 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
           </select>
         </div>
         <div className={styles.actions}>
-          <button className={styles.button} type="submit" disabled={pending}>
-            {pending ? "保存中..." : "保存する"}
+          <button
+            className={styles.button}
+            type="submit"
+            disabled={pending || money.hasError}
+          >
+            {pending
+              ? "保存中..."
+              : money.hasError
+                ? "金額欄を直すと保存できます"
+                : "保存する"}
           </button>
         </div>
       </section>

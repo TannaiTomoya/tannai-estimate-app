@@ -3,7 +3,17 @@
 import { useMemo, useState } from "react";
 import { saveResultAction } from "@/app/actions";
 import { calcResultDiff } from "@/lib/estimate-calc";
+import { validateMoneyInput } from "@/lib/money-input";
+import MoneyField from "@/components/MoneyField";
 import styles from "@/components/estimate-form.module.css";
+
+const MONEY_KEYS = [
+  "actualMaterialPurchaseTotal",
+  "actualConsumablesCost",
+  "actualTechFee",
+  "actualMiscCost",
+  "actualOrderAmount",
+];
 
 export default function EstimateResultForm({ estimate }) {
   const [error, setError] = useState("");
@@ -21,18 +31,29 @@ export default function EstimateResultForm({ estimate }) {
     nextInsight: "",
   });
 
+  const money = useMemo(() => {
+    const parsed = {};
+    let hasError = false;
+    MONEY_KEYS.forEach((key) => {
+      const r = validateMoneyInput(form[key]);
+      parsed[key] = r.value ?? 0;
+      if (r.error) hasError = true;
+    });
+    return { parsed, hasError };
+  }, [form]);
+
   const previewDiff = useMemo(
     () =>
       calcResultDiff(estimate, {
         actual_worker_count: form.actualWorkerCount,
         actual_days: form.actualDays,
-        actual_material_purchase_total: form.actualMaterialPurchaseTotal,
-        actual_consumables_cost: form.actualConsumablesCost,
-        actual_tech_fee: form.actualTechFee,
-        actual_misc_cost: form.actualMiscCost,
-        actual_order_amount: form.actualOrderAmount,
+        actual_material_purchase_total: money.parsed.actualMaterialPurchaseTotal,
+        actual_consumables_cost: money.parsed.actualConsumablesCost,
+        actual_tech_fee: money.parsed.actualTechFee,
+        actual_misc_cost: money.parsed.actualMiscCost,
+        actual_order_amount: money.parsed.actualOrderAmount,
       }),
-    [estimate, form],
+    [estimate, form, money],
   );
 
   function update(key, value) {
@@ -41,13 +62,17 @@ export default function EstimateResultForm({ estimate }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (money.hasError) {
+      setError("金額欄に小数点や数字以外が入っています。直してから保存してください。");
+      return;
+    }
     setPending(true);
     setError("");
 
     const formData = new FormData();
     formData.set("estimateId", estimate.id);
     Object.entries(form).forEach(([key, value]) => {
-      formData.set(key, value);
+      formData.set(key, MONEY_KEYS.includes(key) ? money.parsed[key] : value);
     });
 
     const result = await saveResultAction(formData);
@@ -91,53 +116,36 @@ export default function EstimateResultForm({ estimate }) {
               onChange={(e) => update("actualDays", e.target.value)}
             />
           </div>
-          <div className={styles.field}>
-            <label>実際の材料仕入れ合計</label>
-            <input
-              type="number"
-              min="0"
-              value={form.actualMaterialPurchaseTotal}
-              onChange={(e) =>
-                update("actualMaterialPurchaseTotal", e.target.value)
-              }
-            />
-          </div>
-          <div className={styles.field}>
-            <label>実際の消耗品費</label>
-            <input
-              type="number"
-              min="0"
-              value={form.actualConsumablesCost}
-              onChange={(e) => update("actualConsumablesCost", e.target.value)}
-            />
-          </div>
-          <div className={styles.field}>
-            <label>実際の技術料</label>
-            <input
-              type="number"
-              min="0"
-              value={form.actualTechFee}
-              onChange={(e) => update("actualTechFee", e.target.value)}
-            />
-          </div>
-          <div className={styles.field}>
-            <label>実際の諸経費</label>
-            <input
-              type="number"
-              min="0"
-              value={form.actualMiscCost}
-              onChange={(e) => update("actualMiscCost", e.target.value)}
-            />
-          </div>
-          <div className={styles.field}>
-            <label>実際の受注金額（税抜）</label>
-            <input
-              type="number"
-              min="0"
-              value={form.actualOrderAmount}
-              onChange={(e) => update("actualOrderAmount", e.target.value)}
-            />
-          </div>
+          <MoneyField
+            id="actualMaterialPurchaseTotal"
+            label="実際の材料仕入れ合計"
+            value={form.actualMaterialPurchaseTotal}
+            onChange={(v) => update("actualMaterialPurchaseTotal", v)}
+          />
+          <MoneyField
+            id="actualConsumablesCost"
+            label="実際の消耗品費"
+            value={form.actualConsumablesCost}
+            onChange={(v) => update("actualConsumablesCost", v)}
+          />
+          <MoneyField
+            id="actualTechFee"
+            label="実際の技術料"
+            value={form.actualTechFee}
+            onChange={(v) => update("actualTechFee", v)}
+          />
+          <MoneyField
+            id="actualMiscCost"
+            label="実際の諸経費"
+            value={form.actualMiscCost}
+            onChange={(v) => update("actualMiscCost", v)}
+          />
+          <MoneyField
+            id="actualOrderAmount"
+            label="実際の受注金額（税抜）"
+            value={form.actualOrderAmount}
+            onChange={(v) => update("actualOrderAmount", v)}
+          />
           <div className={styles.field}>
             <label>作業完了日</label>
             <input
@@ -191,8 +199,16 @@ export default function EstimateResultForm({ estimate }) {
           />
         </div>
         <div className={styles.actions}>
-          <button className={styles.button} type="submit" disabled={pending}>
-            {pending ? "保存中..." : "実績を保存する"}
+          <button
+            className={styles.button}
+            type="submit"
+            disabled={pending || money.hasError}
+          >
+            {pending
+              ? "保存中..."
+              : money.hasError
+                ? "金額欄を直すと保存できます"
+                : "実績を保存する"}
           </button>
         </div>
       </section>
