@@ -73,6 +73,9 @@ export default async function EstimateDetailPage({ params }) {
         <Link className={styles.buttonSecondary} href={`/estimates/${id}/edit`}>
           編集
         </Link>
+        <Link className={styles.buttonSecondary} href={`/estimates/${id}/print`}>
+          見積書を印刷
+        </Link>
         <Link className={styles.button} href={`/estimates/${id}/result`}>
           実績入力
         </Link>
@@ -84,8 +87,11 @@ export default async function EstimateDetailPage({ params }) {
           <p>案件名: {estimate.title}</p>
           <p>顧客名: {estimate.customer_name}</p>
           <p>作業場所: {estimate.work_location || "—"}</p>
+          <p>見積番号: {estimate.estimate_no || "—（保存し直すと採番されます）"}</p>
           <p>見積もり日: {estimate.estimate_date}</p>
           <p>予定納期: {estimate.delivery_date || "—"}</p>
+          <p>見積有効期限: {estimate.valid_until || "—"}</p>
+          <p>顧客向け備考: {estimate.customer_note || "—"}</p>
           <p>ステータス: {STATUS_LABELS[estimate.status] || estimate.status}</p>
         </div>
       </section>
@@ -118,8 +124,8 @@ export default async function EstimateDetailPage({ params }) {
           <ul>
             {(materials || []).map((row) => (
               <li key={row.id}>
-                {row.name} / 仕入 {yen(row.unit_purchase_price)} × {row.quantity}{" "}
-                = {yen(row.line_total)}
+                {row.name} / 仕入 {yen(row.unit_purchase_price)} × {row.quantity}
+                {row.unit || "個"} = {yen(row.line_total)}
               </li>
             ))}
           </ul>

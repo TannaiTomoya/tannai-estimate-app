@@ -81,6 +81,9 @@ auth.users (1)
 | `status` | `text` | NO | `draft` / `presented` / `won` / `lost` / `done`。デフォルト `draft` |
 | `created_at` | `timestamptz` | NO | 作成日時。デフォルト `now()` |
 | `updated_at` | `timestamptz` | NO | 更新日時。デフォルト `now()` |
+| `estimate_no` | `text` | YES | 見積番号 `YYYYMMDD-NN`。新規保存時に `save_estimate()` が同日連番で採番（Version 1.1） |
+| `valid_until` | `date` | YES | 見積書の有効期限。既定は見積日＋30日（Version 1.1） |
+| `customer_note` | `text` | YES | 顧客向け備考。判断理由メモとは別（Version 1.1） |
 
 #### 主キー
 - `id`
@@ -128,6 +131,7 @@ auth.users (1)
 | `name` | `text` | NO | 材料名 |
 | `unit_purchase_price` | `integer` | NO | 仕入れ単価（円） |
 | `quantity` | `numeric(10,2)` | NO | 数量 |
+| `unit` | `text` | NO | 数量の単位（個・枚・本など）。デフォルト `'個'`（Version 1.1） |
 | `line_total` | `integer` | NO | 行合計（仕入れ単価 × 数量）（円） |
 | `sort_order` | `integer` | NO | 表示順。デフォルト `0` |
 | `created_at` | `timestamptz` | NO | 作成日時。デフォルト `now()` |

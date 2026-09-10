@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  // dev 起動時に AGENTS.md / CLAUDE.md を自動生成しない
+  agentRules: false,
 };
 
 export default nextConfig;

@@ -129,7 +129,7 @@ export default function FuturisticBackdrop() {
   }, []);
 
   return (
-    <div className={styles.root} aria-hidden="true">
+    <div className={styles.root} aria-hidden="true" data-backdrop="">
       <div className={styles.gradient} />
       <div className={styles.scan} />
       <div ref={mountRef} className={styles.canvas} />

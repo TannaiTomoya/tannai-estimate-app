@@ -32,6 +32,7 @@
 | `/estimates/[id]` | 見積もり詳細 |
 | `/estimates/[id]/edit` | 見積もり編集 |
 | `/estimates/[id]/result` | 実績入力・差分メモ |
+| `/estimates/[id]/print` | 見積書（顧客向け）の印刷 / PDF保存 |
 
 ## 入力ルール
 

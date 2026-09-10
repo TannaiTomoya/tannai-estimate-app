@@ -13,31 +13,44 @@ import {
 } from "@/lib/estimate-calc";
 import { saveEstimateAction } from "@/app/actions";
 import { formatYen, validateMoneyInput } from "@/lib/money-input";
+import {
+  DEFAULT_MATERIAL_UNIT,
+  MATERIAL_UNIT_OPTIONS,
+  defaultValidUntil,
+} from "@/lib/company";
 import MoneyField from "./MoneyField";
 import styles from "./estimate-form.module.css";
 
+/** 端末のローカル日付で YYYY-MM-DD（UTC 基準だと 21 時以降に前日になるため） */
 function todayString() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function emptyMaterial() {
-  return { name: "", unitPurchasePrice: "", quantity: "" };
+  return { name: "", unitPurchasePrice: "", quantity: "", unit: DEFAULT_MATERIAL_UNIT };
 }
 
-function mapInitial(initial) {
+function mapInitial(initial, validDays) {
   if (!initial) {
     const defaultCondition = {
       workload: "medium",
       includesConsumables: false,
       includesTechFee: false,
     };
+    const today = todayString();
     return {
       id: null,
       title: "",
       customerName: "",
       workLocation: "",
-      estimateDate: todayString(),
+      estimateDate: today,
       deliveryDate: "",
+      validUntil: defaultValidUntil(today, validDays),
+      customerNote: "",
       workerCount: 1,
       plannedDays: 1,
       workload: "medium",
@@ -64,6 +77,10 @@ function mapInitial(initial) {
     workLocation: initial.work_location || "",
     estimateDate: initial.estimate_date || todayString(),
     deliveryDate: initial.delivery_date || "",
+    validUntil:
+      initial.valid_until ||
+      defaultValidUntil(initial.estimate_date || todayString(), validDays),
+    customerNote: initial.customer_note || "",
     workerCount: initial.worker_count ?? 1,
     plannedDays: initial.planned_days ?? 1,
     workload: initial.workload || "medium",
@@ -77,6 +94,7 @@ function mapInitial(initial) {
             name: row.name || "",
             unitPurchasePrice: row.unit_purchase_price ?? "",
             quantity: row.quantity ?? "",
+            unit: row.unit || DEFAULT_MATERIAL_UNIT,
           }))
         : [emptyMaterial()],
     markupRate: Number(initial.material_markup_rate) || 1.2,
@@ -90,8 +108,12 @@ function mapInitial(initial) {
   };
 }
 
-export default function EstimateForm({ initialEstimate = null, authSkipped = false }) {
-  const [form, setForm] = useState(() => mapInitial(initialEstimate));
+export default function EstimateForm({
+  initialEstimate = null,
+  authSkipped = false,
+  validDays = 30,
+}) {
+  const [form, setForm] = useState(() => mapInitial(initialEstimate, validDays));
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -170,6 +192,8 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
       workLocation: form.workLocation,
       estimateDate: form.estimateDate,
       deliveryDate: form.deliveryDate,
+      validUntil: form.validUntil,
+      customerNote: form.customerNote,
       workerCount: form.workerCount,
       plannedDays: form.plannedDays,
       workload: form.workload,
@@ -450,14 +474,32 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
                     onChange={(e) => updateMaterial(index, "quantity", e.target.value)}
                   />
                 </div>
+                <div className={`${styles.field} ${styles.fieldCompact}`}>
+                  <label htmlFor={`material-unit-${index}`}>
+                    単位 <span className={styles.unit}>（見積書に印字）</span>
+                  </label>
+                  <input
+                    id={`material-unit-${index}`}
+                    list="material-unit-options"
+                    placeholder="個"
+                    maxLength={10}
+                    value={row.unit}
+                    onChange={(e) => updateMaterial(index, "unit", e.target.value)}
+                  />
+                </div>
               </div>
               <p className={styles.materialTotal}>
-                この材料の仕入れ額: {formatYen(price)} × {qty} ={" "}
-                {formatYen(price * qty)}
+                この材料の仕入れ額: {formatYen(price)} × {qty}
+                {row.unit || DEFAULT_MATERIAL_UNIT} = {formatYen(price * qty)}
               </p>
             </div>
           );
         })}
+        <datalist id="material-unit-options">
+          {MATERIAL_UNIT_OPTIONS.map((u) => (
+            <option key={u} value={u} />
+          ))}
+        </datalist>
         <div className={styles.actions}>
           <button
             type="button"
@@ -484,7 +526,9 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
                 {rate}
               </option>
             ))}
-            <option value={form.markupRate}>その他（下で調整）</option>
+            {MARKUP_RATE_OPTIONS.some((r) => r === Number(form.markupRate)) ? null : (
+              <option value={form.markupRate}>その他（下で調整）</option>
+            )}
           </select>
         </div>
         <div className={styles.field}>
@@ -593,7 +637,37 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
       </section>
 
       <section className={styles.section}>
-        <h2>7. 判断理由メモ</h2>
+        <h2>7. 顧客向け情報（見積書に印字）</h2>
+        <p className={styles.explain}>
+          ここに書いた内容は<strong>見積書に印字されます</strong>。
+          社内向けの判断理由は下の「8. 判断理由メモ」に書いてください。
+        </p>
+        <div className={styles.grid}>
+          <div className={styles.field}>
+            <label htmlFor="validUntil">
+              見積有効期限 <span className={styles.unit}>（既定: 見積日＋{validDays}日）</span>
+            </label>
+            <input
+              id="validUntil"
+              type="date"
+              value={form.validUntil}
+              onChange={(e) => updateField("validUntil", e.target.value)}
+            />
+          </div>
+          <div className={`${styles.field} ${styles.fieldFull}`}>
+            <label htmlFor="customerNote">顧客向け備考（任意）</label>
+            <textarea
+              id="customerNote"
+              placeholder="例: 本見積は現地確認の結果により変更になる場合があります。"
+              value={form.customerNote}
+              onChange={(e) => updateField("customerNote", e.target.value)}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2>8. 判断理由メモ</h2>
         {reasonMissing ? (
           <p className={styles.notice}>
             単価・人数日数の理由が未入力です。保存はできますが、できるだけ記入してください。
@@ -626,7 +700,7 @@ export default function EstimateForm({ initialEstimate = null, authSkipped = fal
       </section>
 
       <section className={styles.section}>
-        <h2>8. 保存</h2>
+        <h2>9. 保存</h2>
         <div className={styles.field}>
           <label htmlFor="status">ステータス</label>
           <select

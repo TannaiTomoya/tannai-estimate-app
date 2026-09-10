@@ -11,6 +11,7 @@ import {
   WORKLOAD_OPTIONS,
 } from "@/lib/constants";
 import { computeEstimateTotals } from "@/lib/estimate-calc";
+import { DEFAULT_MATERIAL_UNIT, defaultValidUntil, getCompany } from "@/lib/company";
 import { describeDbError } from "@/lib/db-error";
 
 export async function loginAction(formData) {
@@ -84,6 +85,7 @@ function parseMaterials(raw) {
           name: String(row.name).trim(),
           unit_purchase_price: unitPurchasePrice,
           quantity,
+          unit: String(row.unit || "").trim().slice(0, 10) || DEFAULT_MATERIAL_UNIT,
           line_total: Math.round(unitPurchasePrice * quantity),
           sort_order: index,
         };
@@ -147,6 +149,8 @@ export async function saveEstimateAction(payload) {
     workLocation: String(payload.workLocation || "").trim() || null,
     estimateDate: String(payload.estimateDate || ""),
     deliveryDate: String(payload.deliveryDate || "") || null,
+    validUntil: String(payload.validUntil || "") || null,
+    customerNote: String(payload.customerNote || "").trim().slice(0, 2000) || null,
     workerCount: toInt(payload.workerCount),
     plannedDays: toNum(payload.plannedDays),
     workload: WORKLOAD_VALUES.has(payload.workload) ? payload.workload : "medium",
@@ -170,6 +174,12 @@ export async function saveEstimateAction(payload) {
   }
   if (input.deliveryDate && !isValidDate(input.deliveryDate)) {
     return { error: "顧客提示予定納期の形式が正しくありません。" };
+  }
+  if (input.validUntil && !isValidDate(input.validUntil)) {
+    return { error: "見積有効期限の形式が正しくありません。" };
+  }
+  if (!input.validUntil) {
+    input.validUntil = defaultValidUntil(input.estimateDate, getCompany().validDays);
   }
   const negatives = [
     input.workerCount,
@@ -235,6 +245,8 @@ export async function saveEstimateAction(payload) {
     reason_delivery: input.reasonDelivery,
     risk_alerts: totals.riskAlerts,
     status: input.status,
+    valid_until: input.validUntil,
+    customer_note: input.customerNote,
   };
 
   // ---- 本体＋材料明細を 1 トランザクションで保存（supabase/migrations/0003） ----

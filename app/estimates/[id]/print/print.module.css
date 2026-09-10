@@ -1,0 +1,275 @@
+/* 見積書: 白背景・黒文字。画面でもそのまま A4 風に見せる */
+
+.wrap {
+  position: relative;
+  min-height: 100vh;
+  background: #e9ecef;
+  color: #111;
+  color-scheme: light;
+  font-family: var(--font-sans), "Hiragino Sans", "Noto Sans JP", sans-serif;
+  padding: 0.75rem 0.5rem 2rem;
+}
+
+.toolbar {
+  max-width: 210mm;
+  margin: 0 auto 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.toolbarLink {
+  color: #0b5cad;
+  text-decoration: none;
+}
+
+.printButton {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.55rem 1.1rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.sheet {
+  background: #fff;
+  color: #111;
+  max-width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 16mm 15mm;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  font-size: 10.5pt;
+  line-height: 1.5;
+}
+
+.title {
+  text-align: center;
+  font-size: 20pt;
+  letter-spacing: 0.5em;
+  margin-bottom: 8mm;
+  font-weight: 600;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8mm;
+  margin-bottom: 6mm;
+}
+
+.headLeft {
+  flex: 1;
+}
+
+.headRight {
+  text-align: right;
+  font-size: 9.5pt;
+}
+
+.headRight p {
+  margin: 0;
+}
+
+.customer {
+  font-size: 14pt;
+  border-bottom: 1px solid #111;
+  padding-bottom: 1mm;
+  margin-bottom: 3mm;
+  display: inline-block;
+  min-width: 70mm;
+}
+
+.greeting {
+  margin: 0 0 4mm;
+}
+
+.issuer {
+  text-align: left;
+  display: inline-block;
+  font-size: 9.5pt;
+  margin-top: 4mm;
+}
+
+.issuer p {
+  margin: 0;
+}
+
+.issuerName {
+  font-size: 12pt;
+  font-weight: 600;
+  margin-bottom: 1mm;
+}
+
+.meta {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 5mm;
+}
+
+.meta th {
+  text-align: left;
+  font-weight: 500;
+  color: #444;
+  width: 22mm;
+  padding: 1mm 0;
+  vertical-align: top;
+}
+
+.meta td {
+  padding: 1mm 0;
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-top: 2px solid #111;
+  border-bottom: 2px solid #111;
+  padding: 2.5mm 2mm;
+  margin: 4mm 0 6mm;
+  font-size: 12pt;
+}
+
+.totalValue {
+  font-size: 18pt;
+  font-weight: 700;
+}
+
+.lines {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 4mm;
+}
+
+.lines th,
+.lines td {
+  border-bottom: 1px solid #bbb;
+  padding: 1.8mm 1.5mm;
+}
+
+.lines th {
+  background: #f1f3f5;
+  font-weight: 600;
+  text-align: center;
+  border-top: 1px solid #111;
+  border-bottom: 1px solid #111;
+}
+
+.lines .name {
+  text-align: left;
+}
+
+.lines .num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.lines .unit {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.detail {
+  display: block;
+  font-size: 9pt;
+  color: #444;
+}
+
+.sums {
+  width: 70mm;
+  margin-left: auto;
+  border-collapse: collapse;
+  margin-bottom: 6mm;
+}
+
+.sums th,
+.sums td {
+  padding: 1.5mm 1.5mm;
+  border-bottom: 1px solid #bbb;
+}
+
+.sums th {
+  text-align: left;
+  font-weight: 500;
+}
+
+.sums td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sums .grand th,
+.sums .grand td {
+  font-weight: 700;
+  border-bottom: 2px solid #111;
+}
+
+.note {
+  border: 1px solid #bbb;
+  padding: 2.5mm 3mm;
+  white-space: pre-wrap;
+  font-size: 9.5pt;
+}
+
+.noteLabel {
+  font-weight: 600;
+  margin-bottom: 1mm;
+}
+
+.warn {
+  max-width: 210mm;
+  margin: 0 auto 0.75rem;
+  background: #fff4d6;
+  color: #7a4d00;
+  border: 1px solid #f0c060;
+  padding: 0.6rem 0.9rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .sheet {
+    padding: 8mm 5mm;
+    min-height: auto;
+    font-size: 9.5pt;
+  }
+
+  .head {
+    flex-direction: column;
+  }
+
+  .headRight {
+    text-align: left;
+  }
+}
+
+@media print {
+  .wrap {
+    background: #fff;
+    padding: 0;
+    min-height: auto;
+  }
+
+  .sheet {
+    box-shadow: none;
+    max-width: none;
+    min-height: auto;
+    padding: 0;
+    margin: 0;
+  }
+
+  .head {
+    flex-direction: row;
+  }
+
+  .headRight {
+    text-align: right;
+  }
+}

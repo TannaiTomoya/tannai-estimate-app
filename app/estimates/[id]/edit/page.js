@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import EstimateForm from "@/components/EstimateForm";
 import { createClient } from "@/utils/supabase/server";
 import { isAuthSkipEnabled } from "@/lib/auth-skip";
+import { getCompany } from "@/lib/company";
 import styles from "@/components/estimate-form.module.css";
 
 export const metadata = {
@@ -51,6 +52,7 @@ export default async function EditEstimatePage({ params }) {
       </div>
       <EstimateForm
         initialEstimate={{ ...estimate, materials: materials || [] }}
+        validDays={getCompany().validDays}
       />
     </main>
   );

@@ -63,3 +63,22 @@ textarea {
   background: rgba(61, 255, 181, 0.35);
   color: #04120e;
 }
+
+/* 見積書印刷: 背景演出とツールバーを消し、A4 白紙にする */
+@page {
+  size: A4 portrait;
+  margin: 15mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  [data-backdrop],
+  .no-print {
+    display: none !important;
+  }
+}
