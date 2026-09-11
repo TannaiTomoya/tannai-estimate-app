@@ -151,6 +151,7 @@ export async function saveEstimateAction(payload) {
     deliveryDate: String(payload.deliveryDate || "") || null,
     validUntil: String(payload.validUntil || "") || null,
     customerNote: String(payload.customerNote || "").trim().slice(0, 2000) || null,
+    staffName: String(payload.staffName || "").trim().slice(0, 50) || null,
     workerCount: toInt(payload.workerCount),
     plannedDays: toNum(payload.plannedDays),
     workload: WORKLOAD_VALUES.has(payload.workload) ? payload.workload : "medium",
@@ -247,6 +248,7 @@ export async function saveEstimateAction(payload) {
     status: input.status,
     valid_until: input.validUntil,
     customer_note: input.customerNote,
+    staff_name: input.staffName,
   };
 
   // ---- 本体＋材料明細を 1 トランザクションで保存（supabase/migrations/0003） ----

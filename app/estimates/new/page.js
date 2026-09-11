@@ -10,6 +10,7 @@ export const metadata = {
 
 export default function NewEstimatePage() {
   const skip = isAuthSkipEnabled();
+  const company = getCompany();
 
   return (
     <main>
@@ -20,7 +21,11 @@ export default function NewEstimatePage() {
           <span />
         </div>
       </div>
-      <EstimateForm authSkipped={skip} validDays={getCompany().validDays} />
+      <EstimateForm
+        authSkipped={skip}
+        validDays={company.validDays}
+        defaultStaff={company.defaultStaff}
+      />
     </main>
   );
 }

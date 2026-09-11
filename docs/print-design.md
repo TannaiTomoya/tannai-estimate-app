@@ -23,7 +23,8 @@
 |---|---|---|
 | 見積番号 | `estimates.estimate_no` | `YYYYMMDD-NN`。新規保存時に RPC が同日連番で採番。更新では不変 |
 | 見積日 | `estimate_date` | `2026年9月4日` 形式 |
-| 有効期限 | `valid_until` | 既定 = 見積日 + `COMPANY_VALID_DAYS`（30）。フォームで変更可 |
+| 有効期限 | `valid_until` | 既定 = 見積日 + `COMPANY_VALID_DAYS`（30）。フォームで変更可。印字は `2026年10月11日（見積日より30日間）` と日数を併記 |
+| 担当者 | `staff_name`（無ければ `COMPANY_DEFAULT_STAFF`） | 発行者欄の下に `担当者 ____ ◯` 。◯は点線の押印枠（16mm）。印影は印字せず、印刷後にシャチハタを手押しする |
 | 宛名 | `customer_name` + 「御中」 | 固定 |
 | 件名 | `title` | |
 | 作業内容 | `work_description` | 空なら非表示 |
@@ -47,9 +48,13 @@
 - `estimate_materials.unit text not null default '個'`
 - `save_estimate()` を差し替え（採番・新列・単位対応）
 
+## DB 変更（`supabase/migrations/0005_staff_name.sql`）
+- `estimates.staff_name text`（NULL 許容）
+- `save_estimate()` を再差し替え（`staff_name` 対応）
+
 ## フォーム変更
 - 材料行に「単位」欄（候補: 個・枚・本・m・kg・式・セット、自由入力可）
-- 新セクション「顧客向け情報」: 有効期限（date）・顧客向け備考（textarea）
+- 新セクション「顧客向け情報」: 有効期限（date）・担当者（text、既定 `COMPANY_DEFAULT_STAFF`）・顧客向け備考（textarea）
 
 ## 印刷 CSS
 - `@page { size: A4 portrait; margin: 15mm }`

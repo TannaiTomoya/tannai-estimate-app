@@ -91,6 +91,7 @@ export default async function EstimateDetailPage({ params }) {
           <p>見積もり日: {estimate.estimate_date}</p>
           <p>予定納期: {estimate.delivery_date || "—"}</p>
           <p>見積有効期限: {estimate.valid_until || "—"}</p>
+          <p>担当者: {estimate.staff_name || "—"}</p>
           <p>顧客向け備考: {estimate.customer_note || "—"}</p>
           <p>ステータス: {STATUS_LABELS[estimate.status] || estimate.status}</p>
         </div>

@@ -53,6 +53,7 @@ export default async function EditEstimatePage({ params }) {
       <EstimateForm
         initialEstimate={{ ...estimate, materials: materials || [] }}
         validDays={getCompany().validDays}
+        defaultStaff={getCompany().defaultStaff}
       />
     </main>
   );

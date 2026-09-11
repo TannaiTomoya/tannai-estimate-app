@@ -106,6 +106,38 @@
   margin-bottom: 1mm;
 }
 
+/* 担当者 + 押印欄（印はシャチハタを手押しするため枠だけ印字） */
+.staff {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  margin-top: 3mm;
+}
+
+.staffLabel {
+  color: #444;
+}
+
+.staffName {
+  min-width: 26mm;
+  border-bottom: 1px solid #111;
+  padding: 0 1mm 0.5mm;
+  font-size: 10.5pt;
+}
+
+.stampBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16mm;
+  height: 16mm;
+  border: 1px dashed #999;
+  border-radius: 50%;
+  color: #bbb;
+  font-size: 8pt;
+  flex-shrink: 0;
+}
+
 .meta {
   width: 100%;
   border-collapse: collapse;

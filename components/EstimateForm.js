@@ -16,6 +16,7 @@ import { formatYen, validateMoneyInput } from "@/lib/money-input";
 import {
   DEFAULT_MATERIAL_UNIT,
   MATERIAL_UNIT_OPTIONS,
+  daysBetween,
   defaultValidUntil,
 } from "@/lib/company";
 import MoneyField from "./MoneyField";
@@ -34,7 +35,7 @@ function emptyMaterial() {
   return { name: "", unitPurchasePrice: "", quantity: "", unit: DEFAULT_MATERIAL_UNIT };
 }
 
-function mapInitial(initial, validDays) {
+function mapInitial(initial, validDays, defaultStaff) {
   if (!initial) {
     const defaultCondition = {
       workload: "medium",
@@ -51,6 +52,7 @@ function mapInitial(initial, validDays) {
       deliveryDate: "",
       validUntil: defaultValidUntil(today, validDays),
       customerNote: "",
+      staffName: defaultStaff || "",
       workerCount: 1,
       plannedDays: 1,
       workload: "medium",
@@ -81,6 +83,7 @@ function mapInitial(initial, validDays) {
       initial.valid_until ||
       defaultValidUntil(initial.estimate_date || todayString(), validDays),
     customerNote: initial.customer_note || "",
+    staffName: initial.staff_name || defaultStaff || "",
     workerCount: initial.worker_count ?? 1,
     plannedDays: initial.planned_days ?? 1,
     workload: initial.workload || "medium",
@@ -112,8 +115,11 @@ export default function EstimateForm({
   initialEstimate = null,
   authSkipped = false,
   validDays = 30,
+  defaultStaff = "",
 }) {
-  const [form, setForm] = useState(() => mapInitial(initialEstimate, validDays));
+  const [form, setForm] = useState(() =>
+    mapInitial(initialEstimate, validDays, defaultStaff),
+  );
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -194,6 +200,7 @@ export default function EstimateForm({
       deliveryDate: form.deliveryDate,
       validUntil: form.validUntil,
       customerNote: form.customerNote,
+      staffName: form.staffName,
       workerCount: form.workerCount,
       plannedDays: form.plannedDays,
       workload: form.workload,
@@ -652,6 +659,21 @@ export default function EstimateForm({
               type="date"
               value={form.validUntil}
               onChange={(e) => updateField("validUntil", e.target.value)}
+            />
+            <p className={styles.fieldHint}>
+              見積書には「有効期限: {form.validUntil || "—"}（見積日より
+              {daysBetween(form.estimateDate, form.validUntil) ?? "—"}日間）」と印字されます。
+            </p>
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="staffName">
+              担当者 <span className={styles.unit}>（見積書に印字。印は印刷後に手押し）</span>
+            </label>
+            <input
+              id="staffName"
+              placeholder="例: 丹内"
+              value={form.staffName}
+              onChange={(e) => updateField("staffName", e.target.value)}
             />
           </div>
           <div className={`${styles.field} ${styles.fieldFull}`}>

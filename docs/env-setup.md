@@ -20,6 +20,7 @@ COMPANY_FAX=（FAX番号。無ければ空）
 COMPANY_INVOICE_NUMBER=（適格請求書発行事業者番号 T+13桁。無ければ空）
 COMPANY_VALID_DAYS=30
 COMPANY_DEFAULT_NOTE=（毎回入れる備考。無ければ空）
+COMPANY_DEFAULT_STAFF=（担当者の既定値。例: 丹内。フォームで毎回変更可）
 ```
 
 - 実際の値はこのファイルに書かない（リポジトリが公開のため）。`.env.local` と Vercel にだけ設定する

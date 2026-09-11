@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { isAuthSkipEnabled } from "@/lib/auth-skip";
-import { getCompany } from "@/lib/company";
+import { daysBetween, getCompany } from "@/lib/company";
 import {
   buildQuoteLines,
   formatJaDate,
@@ -63,6 +63,8 @@ export default async function EstimatePrintPage({ params, searchParams }) {
   const taxPercent = Math.round((Number(estimate.tax_rate) || 0.1) * 100);
 
   const missingCompany = !company.name;
+  const validDays = daysBetween(estimate.estimate_date, estimate.valid_until);
+  const staffName = estimate.staff_name || company.defaultStaff || "";
 
   return (
     <main className={styles.wrap}>
@@ -92,7 +94,10 @@ export default async function EstimatePrintPage({ params, searchParams }) {
             {estimate.estimate_no ? <p>見積番号: {estimate.estimate_no}</p> : null}
             <p>見積日: {formatJaDate(estimate.estimate_date)}</p>
             {estimate.valid_until ? (
-              <p>有効期限: {formatJaDate(estimate.valid_until)}</p>
+              <p>
+                有効期限: {formatJaDate(estimate.valid_until)}
+                {validDays != null && validDays > 0 ? `（見積日より${validDays}日間）` : ""}
+              </p>
             ) : null}
             <div className={styles.issuer}>
               {company.name ? <p className={styles.issuerName}>{company.name}</p> : null}
@@ -107,6 +112,13 @@ export default async function EstimatePrintPage({ params, searchParams }) {
                 </p>
               ) : null}
               {company.invoiceNumber ? <p>登録番号 {company.invoiceNumber}</p> : null}
+              <div className={styles.staff}>
+                <span className={styles.staffLabel}>担当者</span>
+                <span className={styles.staffName}>{staffName}</span>
+                <span className={styles.stampBox} aria-label="押印欄">
+                  印
+                </span>
+              </div>
             </div>
           </div>
         </div>

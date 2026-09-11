@@ -84,6 +84,7 @@ auth.users (1)
 | `estimate_no` | `text` | YES | 見積番号 `YYYYMMDD-NN`。新規保存時に `save_estimate()` が同日連番で採番（Version 1.1） |
 | `valid_until` | `date` | YES | 見積書の有効期限。既定は見積日＋30日（Version 1.1） |
 | `customer_note` | `text` | YES | 顧客向け備考。判断理由メモとは別（Version 1.1） |
+| `staff_name` | `text` | YES | 担当者名。見積書に印字（押印は手押し）（Version 1.1） |
 
 #### 主キー
 - `id`
