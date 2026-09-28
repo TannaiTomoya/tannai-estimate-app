@@ -152,17 +152,17 @@ export default async function EstimatePrintPage({ params, searchParams }) {
           </tbody>
         </table>
 
-        <div className={styles.total}>
-          <span>お見積金額（税込）</span>
-          <span className={styles.totalValue}>
-            ¥{formatYenPlain(estimate.total_with_tax)}
-          </span>
-        </div>
-
         <table className={styles.lines}>
+          <colgroup>
+            <col style={{ width: "44%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "18%" }} />
+            <col style={{ width: "20%" }} />
+          </colgroup>
           <thead>
             <tr>
-              <th style={{ width: "46%" }}>品名</th>
+              <th>品名</th>
               <th>数量</th>
               <th>単位</th>
               <th>単価</th>

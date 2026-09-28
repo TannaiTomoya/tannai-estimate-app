@@ -24,7 +24,7 @@
 | 見積番号 | `estimates.estimate_no` | `YYYYMMDD-NN`。新規保存時に RPC が同日連番で採番。更新では不変 |
 | 見積日 | `estimate_date` | `2026年9月4日` 形式 |
 | 有効期限 | `valid_until` | 既定 = 見積日 + `COMPANY_VALID_DAYS`（30）。フォームで変更可。印字は `2026年10月11日（見積日より30日間）` と日数を併記 |
-| 担当者 | `staff_name`（無ければ `COMPANY_DEFAULT_STAFF`） | 発行者欄の下に `担当者 ____ ◯` 。◯は点線の押印枠（16mm）。印影は印字せず、印刷後にシャチハタを手押しする |
+| 担当者 | `staff_name`（無ければ `COMPANY_DEFAULT_STAFF`） | 発行者欄の下に `担当者 ____ ◯` 。◯は点線の押印枠（12mm、11mm 径のシャチハタが収まる）。印影は印字せず、印刷後にシャチハタを手押しする |
 | 宛名 | `customer_name` + 「御中」 | 固定 |
 | 件名 | `title` | |
 | 作業内容 | `work_description` | 空なら非表示 |
@@ -35,7 +35,7 @@
 | 材料の単価 | `round(unit_purchase_price × material_markup_rate)` | 仕入れ単価・掛け率は非表示 |
 | 材料の金額 | `round(line_total × material_markup_rate)` | 最終行で丸め差を吸収し、材料合計 = `material_cost` |
 | 消耗品費 / 技術料 / 諸経費 | 各列 | 0円は行ごと省略。数量1・式 |
-| 小計 / 消費税(10%) / 合計（税込） | `subtotal` / `tax_amount` / `total_with_tax` | |
+| 小計 / 消費税(10%) / 合計（税込） | `subtotal` / `tax_amount` / `total_with_tax` | 明細表の直下に右寄せ。合計行は強調。上部の「お見積金額」欄は置かない（明細を主役にするため） |
 | 備考 | `customer_note`（無ければ `COMPANY_DEFAULT_NOTE`） | 両方空なら欄ごと非表示 |
 | 発行者 | `COMPANY_*` | 社名・〒・住所・TEL/FAX・登録番号 |
 
@@ -61,3 +61,5 @@
 - 白背景・黒文字・ゴシック
 - ツールバー（印刷ボタン・内訳トグル・戻る）は `@media print` で非表示
 - Three.js 背景は印刷時 `display: none`
+- 明細表: 列幅固定（品名44% / 数量10% / 単位8% / 単価18% / 金額20%）、ヘッダー上罫と最終行下罫は太線、金額は 11pt
+- 背景色（ヘッダー・合計行）は `print-color-adjust: exact` で印刷にも反映
