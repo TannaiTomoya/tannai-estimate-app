@@ -6,8 +6,9 @@ export const metadata = {
   title: "ログイン | 見積もりアプリ",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }) {
   const skip = isAuthSkipEnabled();
+  const { next } = (await searchParams) || {};
 
   return (
     <main className={styles.page}>
@@ -22,7 +23,7 @@ export default function LoginPage() {
             開発用スキップ中です。本番ではこの表示は出ません。
           </p>
         ) : null}
-        <LoginForm />
+        <LoginForm next={typeof next === "string" ? next : ""} />
       </div>
     </main>
   );

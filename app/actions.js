@@ -42,7 +42,17 @@ export async function loginAction(formData) {
     };
   }
 
-  redirect("/estimates");
+  redirect(safeNextPath(formData.get("next")));
+}
+
+/** 外部サイトへのリダイレクトを防ぐため、自サイト内の絶対パスだけ許可する */
+function safeNextPath(value) {
+  const next = String(value || "");
+  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) {
+    return "/estimates";
+  }
+  if (next === "/login" || next.startsWith("/login?")) return "/estimates";
+  return next;
 }
 
 export async function logoutAction() {

@@ -1,13 +1,11 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { detectInAppBrowser } from "@/lib/in-app-browser";
 import { createClient } from "@/utils/supabase/server";
 import { isAuthSkipEnabled } from "@/lib/auth-skip";
-import { daysBetween, getCompany } from "@/lib/company";
-import {
-  buildQuoteLines,
-  formatJaDate,
-  formatYenPlain,
-} from "@/lib/estimate-print";
+import { getCompany } from "@/lib/company";
+import { buildQuoteView, formatJaDate, formatYenPlain } from "@/lib/estimate-print";
 import { describeDbError } from "@/lib/db-error";
 import PrintToolbar from "./PrintToolbar";
 import styles from "./print.module.css";
@@ -58,17 +56,18 @@ export default async function EstimatePrintPage({ params, searchParams }) {
     .order("sort_order", { ascending: true });
 
   const company = getCompany();
-  const lines = buildQuoteLines(estimate, materials || [], { showLaborDetail: showDetail });
-  const note = estimate.customer_note || company.defaultNote || "";
-  const taxPercent = Math.round((Number(estimate.tax_rate) || 0.1) * 100);
-
+  const { lines, note, taxPercent, validDays, staffName } = buildQuoteView(
+    estimate,
+    materials,
+    company,
+    { showLaborDetail: showDetail },
+  );
   const missingCompany = !company.name;
-  const validDays = daysBetween(estimate.estimate_date, estimate.valid_until);
-  const staffName = estimate.staff_name || company.defaultStaff || "";
+  const inApp = detectInAppBrowser((await headers()).get("user-agent"));
 
   return (
     <main className={styles.wrap}>
-      <PrintToolbar estimateId={id} showDetail={showDetail} />
+      <PrintToolbar estimateId={id} showDetail={showDetail} inApp={inApp} />
 
       {missingCompany ? (
         <p className={`${styles.warn} no-print`}>

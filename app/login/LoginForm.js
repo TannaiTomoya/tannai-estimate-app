@@ -4,7 +4,7 @@ import { useState } from "react";
 import { loginAction } from "@/app/actions";
 import styles from "./login.module.css";
 
-export default function LoginForm() {
+export default function LoginForm({ next = "" }) {
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -25,6 +25,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit}>
       {error ? <p className={styles.error}>{error}</p> : null}
+      <input type="hidden" name="next" value={next} />
 
       <div className={styles.field}>
         <label htmlFor="password">管理者パスワード</label>

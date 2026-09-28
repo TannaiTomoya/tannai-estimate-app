@@ -1,4 +1,4 @@
-# 見積書印刷 設計（Version 1.1）
+# 見積書印刷 設計（Version 1.2）
 
 ## 目的
 `/estimates/[id]` の内容から、顧客に渡せる見積書を A4 で印刷・PDF 保存する。
@@ -8,10 +8,25 @@
 | パス | 内容 |
 |---|---|
 | `/estimates/[id]/print` | 見積書レイアウト。`?detail=1` で作業費の内訳（人数×日数×単価）を表示 |
+| `/estimates/[id]/pdf` | 同じ内容の PDF をサーバーで生成して返す（`inline`）。`?detail=1` 対応 |
 
 - 詳細画面の操作ボタンに「見積書を印刷」を追加
-- 認証は既存 middleware で保護
-- PDF 化はブラウザ標準の印刷 → 「PDF として保存」（ライブラリ不要）
+- 認証は既存 middleware で保護。未ログイン時は `/login?next=<元のパス>` に飛ばし、ログイン後に元のページへ戻す
+- 表示データは `buildQuoteView()`（`lib/estimate-print.js`）を印刷ページと PDF で共用
+
+## 印刷 / PDF の導線（Version 1.2）
+LINE など**アプリ内ブラウザは `window.print()` が動かない**ため、次の2本立てにする。
+
+| 環境 | 表示するボタン |
+|---|---|
+| 通常ブラウザ（Safari / Chrome / PC） | 「PDFを開く（保存・印刷）」＋「この画面を印刷」 |
+| アプリ内ブラウザ（LINE / Instagram / Facebook / X / TikTok） | 「PDFを開く」＋ 案内。LINE は「Safari / Chrome で開く」（URL に `openExternalBrowser=1`） |
+
+- 判定はサーバー側でリクエストの User-Agent から行う（`lib/in-app-browser.js`）
+- 「この画面を印刷」を押した後は、印刷画面が出ない端末向けに共有メニューからの手順を表示
+- PDF 生成: `@react-pdf/renderer`（`lib/pdf/EstimatePdf.js`）。フォントは BIZ UDPゴシック（OFL、`assets/fonts/`）を埋め込み（サブセット化され 1 ページ約 40KB）
+- フォントは `next.config.mjs` の `outputFileTracingIncludes` で Vercel の関数に同梱
+- 外部ブラウザではログインが別になるため、最初に一度ログインが必要
 
 ## 自社情報
 - `lib/company.js` の `getCompany()` が環境変数 `COMPANY_*` から読む（`docs/env-setup.md`）

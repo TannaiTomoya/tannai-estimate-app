@@ -49,14 +49,23 @@ export async function updateSession(request) {
 
   if (!user && !isPublicPage && !isPublicAsset) {
     const url = request.nextUrl.clone();
+    const back = new URLSearchParams(request.nextUrl.search);
+    back.delete("openExternalBrowser");
+    const backQuery = back.toString();
     url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("next", `${pathname}${backQuery ? `?${backQuery}` : ""}`);
     return NextResponse.redirect(url);
   }
 
   if (user && isLoginPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/estimates";
-    return NextResponse.redirect(url);
+    const next = request.nextUrl.searchParams.get("next") || "";
+    const safe =
+      next.startsWith("/") &&
+      !next.startsWith("//") &&
+      !next.startsWith("/\\") &&
+      !next.startsWith("/login");
+    return NextResponse.redirect(new URL(safe ? next : "/estimates", request.url));
   }
 
   return supabaseResponse;
