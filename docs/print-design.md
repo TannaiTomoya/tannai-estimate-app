@@ -45,7 +45,7 @@ LINE など**アプリ内ブラウザは `window.print()` が動かない**た�
 | 作業内容 | `work_description` | 空なら非表示 |
 | 作業場所 | `work_location` | 空なら非表示 |
 | 納期 | `delivery_date` | 空なら「別途ご相談」 |
-| 加工費 | `labor_cost` | 常に1行目。数量1・単位「式」・単価「—」。`?detail=1` で `（2人 × 3日 × @¥50,000）` を補記 |
+| 工事費 | `labor_cost` | 常に1行目。数量1・単位「式」・単価「—」。`?detail=1` で `（2人 × 3日 × @¥50,000）` を補記 |
 | 材料 | `estimate_materials` 全行 | 品名・数量・単位（`unit`）・単価・金額 |
 | 材料の単価 | `round(unit_purchase_price × material_markup_rate)` | 仕入れ単価・掛け率は非表示 |
 | 材料の金額 | `round(line_total × material_markup_rate)` | 最終行で丸め差を吸収し、材料合計 = `material_cost` |

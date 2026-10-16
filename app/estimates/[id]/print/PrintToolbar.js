@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { LABOR_LABEL } from "@/lib/company";
 import { externalBrowserUrl } from "@/lib/in-app-browser";
 import styles from "./print.module.css";
 
@@ -30,7 +31,7 @@ export default function PrintToolbar({ estimateId, showDetail, inApp }) {
           href={`/estimates/${estimateId}/print${showDetail ? "" : "?detail=1"}`}
           className={styles.toolbarLink}
         >
-          {showDetail ? "加工費の内訳を隠す" : "加工費の内訳を表示"}
+          {showDetail ? `${LABOR_LABEL}の内訳を隠す` : `${LABOR_LABEL}の内訳を表示`}
         </Link>
       </div>
 

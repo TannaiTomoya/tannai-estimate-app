@@ -20,7 +20,7 @@
 | `/estimates/[id]` | `app/estimates/[id]/page.js` | 詳細 | 保存後の着地 |
 | `/estimates/[id]/edit` | `app/estimates/[id]/edit/page.js` | 編集 | new と同じフォームを再利用 |
 | `/estimates/[id]/result` | `app/estimates/[id]/result/page.js` | 実績入力 | 見積もりとの差分を記録 |
-| `/estimates/[id]/print` | `app/estimates/[id]/print/page.js` | 見積書印刷 | 顧客向け。`?detail=1` で加工費内訳を表示（Version 1.2、`docs/print-design.md`） |
+| `/estimates/[id]/print` | `app/estimates/[id]/print/page.js` | 見積書印刷 | 顧客向け。`?detail=1` で工事費内訳を表示（Version 1.2、`docs/print-design.md`） |
 | `/estimates/[id]/pdf` | `app/estimates/[id]/pdf/route.js` | 見積書PDF | サーバー生成の PDF を返す。アプリ内ブラウザでも保存・印刷可 |
 
 ## ディレクトリ構成（想定）
